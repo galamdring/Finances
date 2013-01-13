@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    
+
+    <EditText
+        android:id="@+id/symbol"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Enter Symbol"
+        android:inputType="textCapCharacters" >
+
+        <requestFocus />
+    </EditText>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/getquote"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get Quote" />
+
+        <Button
+            android:id="@+id/addPortfolioItem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Portfolio Item" />
+
+        <Button
+            android:id="@+id/updateLists"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Update Portfolio" />
+
+    </LinearLayout>
+
+      <LinearLayout 
+      android:id="@+id/portLL"
+      android:layout_width="fill_parent"
+	  android:layout_height="wrap_content">
+    <ListView
+        android:id="@+id/portItems"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:layout_weight="1">
+    </ListView>
+    
+        
+  </LinearLayout>
+
+
+</LinearLayout>

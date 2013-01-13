@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal" >
+
+    <TextView
+        android:id="@+id/portID"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingBottom="10dp"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/portSymbols"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:paddingBottom="10dp"
+        android:textSize="12sp" >
+
+    </TextView >
+    
+    <TextView
+        android:id="@+id/portOwned"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:paddingBottom="10dp"
+        android:textSize="12sp" >
+
+    </TextView >
+
+    <TextView
+        android:id="@+id/portPaid"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:paddingBottom="10dp"
+        android:textSize="12sp" >
+
+    </TextView >
+
+    <TextView
+        android:id="@+id/portCurrent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="4"
+        android:paddingBottom="10dp"
+        android:textSize="12sp" >
+
+    </TextView >
+
+    <TextView
+        android:id="@+id/portDiff"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:paddingBottom="10dp"
+        android:textSize="12sp" >
+
+    </TextView >
+    
+
+</LinearLayout>

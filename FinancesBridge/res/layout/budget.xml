@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity" >
+<LinearLayout 
+	    android:id="@+id/LL3"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentBottom="true">
+<!-- 
+	<Button
+	    android:id="@+id/displayBudget"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_weight="1.48"
+	    android:text="Budget" />
+
+    <Button
+        android:id="@+id/getStockQuote"
+   	    android:layout_width="wrap_content"
+   	    android:layout_height="wrap_content"
+   	    android:text="Portfolio"
+   	    android:layout_weight="1" />
+ -->   	</LinearLayout>
+
+	<LinearLayout 
+	    android:layout_above="@id/LL3"
+	    android:id="@+id/LL1"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content">
+		<Button
+            android:id="@+id/addExpense"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Add an Expense" 
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/addIncome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="Add an Income" 
+            android:layout_weight="1"/>
+        </LinearLayout>
+  
+	  
+  
+  <LinearLayout
+      android:id="@+id/LL5"
+      android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  android:layout_alignParentTop="true">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:gravity="center"
+        android:layout_weight="1"
+        android:text="Expenses" />
+
+    <TextView
+        android:gravity="center"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:text="Income"/>
+    
+          
+  </LinearLayout>
+ <LinearLayout 
+	    android:id="@+id/LL2"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_above="@id/LL1">
+
+    <TextView
+        android:layout_width="113dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_weight="0.52"
+        android:gravity="right"
+        android:text="Budget Balance: " />
+
+    
+    <TextView
+          android:id="@+id/budgetbalance"
+          android:layout_width="67dp"
+          android:layout_weight="1"
+          android:layout_height="wrap_content"
+          android:gravity="center"
+          android:text="" />
+    
+
+
+	</LinearLayout>
+  <LinearLayout
+      android:id="@+id/LL4"
+      android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  android:layout_above="@id/LL2"
+	  >
+
+      <TextView
+          android:layout_width="113dp"
+          android:layout_height="wrap_content"
+          android:gravity="center"
+          android:layout_weight="0.15"
+          android:text="Total Expenses: " />
+
+      <TextView
+          android:id="@+id/totalexpenses"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:gravity="center"
+          android:layout_weight="0.10"
+          android:text="" />
+   
+          
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:gravity="center"
+          android:layout_weight="0.25"
+          android:text="Total Income: " />
+
+      <TextView
+        android:id="@+id/totalincome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_weight="0.25"
+        android:text="" />
+  </LinearLayout>
+   <LinearLayout 
+      android:id="@+id/LL6"
+      android:layout_above="@id/LL4"
+      android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  android:layout_below="@id/LL5">
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        
+        android:layout_alignParentRight="true"
+        android:layout_weight="1">
+    </ListView>
+    <View 
+        android:layout_width="1dip"
+        android:layout_height="fill_parent"
+        android:background="#FF0000FF"
+        android:layout_toLeftOf="@id/list"
+        />
+    <ListView
+        android:id="@+id/list2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:layout_alignParentLeft="true"
+        android:layout_weight="1">
+    </ListView>
+    
+        
+  </LinearLayout>
+</RelativeLayout>
