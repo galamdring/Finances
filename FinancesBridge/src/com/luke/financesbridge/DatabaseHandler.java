@@ -22,6 +22,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	static final String KEY_ID="_id";
 	static final String KEY_NAME="name";
 	static final String KEY_AMT="amount";
+	SQLiteDatabase db;
 	
 	public DatabaseHandler(Context context){
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -46,7 +47,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	 */
 	//Add new expense
 	void resetIds(){
-		SQLiteDatabase db = this.getReadableDatabase();
+		db = this.getReadableDatabase();
 		List<budgetItem> listExpense=getAllExpenseItems();
 		List<budgetItem> listIncome=getAllIncomeItems();
 		int numIncome=getItemCount(TABLE_INCOME);
@@ -57,6 +58,35 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 			}
 		}
 	}
+	public List<Integer> getIdList(String type) {
+		String TABLE = null;
+		if(db == null || !db.isOpen()){
+			db=getReadableDatabase();
+		}
+		if(!db.isReadOnly()){
+			db.close();
+			db=getReadableDatabase();
+		}
+		if (type == "expense"){
+			TABLE=TABLE_EXPENSE;
+		}
+		if (type == "income"){
+			TABLE=TABLE_INCOME;
+		}
+			
+		String query="SELECT "+KEY_ID+" FROM "+TABLE;
+		Cursor c = db.rawQuery(query, null);
+		c.moveToFirst();
+		List<Integer> intList=new ArrayList<Integer>();
+		if (c.getCount()>0){
+			for (int i=0;i<c.getCount();i++){
+				intList.add(c.getInt(0));
+				c.moveToNext();
+			}
+		}
+		return intList;
+	}
+	
 	void addBudgetItem(String type, String name, float amt){
 		SQLiteDatabase db = this.getWritableDatabase();
 		
@@ -93,7 +123,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		}
 			Cursor cursor=db.query(SELECT_TABLE, new String[] {KEY_ID, KEY_NAME, KEY_AMT},KEY_ID+"=?", new String[]{String.valueOf(id)},null,null,null,null);
 			cursor.moveToFirst();
-			budgetItem budgetItem=new budgetItem(Integer.parseInt(cursor.getString(0)),type,cursor.getString(1),Float.parseFloat(cursor.getString(2)));
+			budgetItem budgetItem=new budgetItem(Integer.parseInt(cursor.getString(0)),type,cursor.getString(1),Float.parseFloat(cursor.getString(2)),false);
 		return budgetItem;
 	}
 	public int updateBudgetItem(budgetItem budgetItem){

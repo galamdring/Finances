@@ -145,11 +145,11 @@
 	  android:layout_below="@id/LL5">
     <ListView
         android:id="@+id/list"
-        android:layout_width="wrap_content"
+        android:layout_width="0dip"
         android:layout_height="wrap_content" 
         
         android:layout_alignParentRight="true"
-        android:layout_weight="1">
+        android:layout_weight="4">
     </ListView>
     <View 
         android:layout_width="1dip"
@@ -159,10 +159,10 @@
         />
     <ListView
         android:id="@+id/list2"
-        android:layout_width="match_parent"
+        android:layout_width="0dip"
         android:layout_height="wrap_content" 
         android:layout_alignParentLeft="true"
-        android:layout_weight="1">
+        android:layout_weight="3">
     </ListView>
     
         

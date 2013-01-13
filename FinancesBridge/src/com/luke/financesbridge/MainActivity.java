@@ -6,9 +6,11 @@ import java.util.List;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -17,6 +19,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -46,6 +49,8 @@ public class MainActivity extends Activity
 	List<String> incomeList=new ArrayList<String>();
 	List<String> expenseList=new ArrayList<String>();
 	List<budgetItem> budgetItemList=new ArrayList<budgetItem>();
+	private ArrayList<budgetItem> expenseItemList = null;
+	private ExpenseListAdapter m_adapter;
 	ListView listView;
 	ListView listView2;
 	TextView tvIncome;
@@ -58,6 +63,7 @@ public class MainActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.budget);
+		new listPopulate().execute();
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		listView=(ListView) findViewById(R.id.list);
 		listView2=(ListView) findViewById(R.id.list2);
@@ -181,24 +187,24 @@ public class MainActivity extends Activity
 	}
 
 	private void fillData(){
-		Cursor expenseCur=db.fetchAllExpense();
-		startManagingCursor(expenseCur);
-		String[] from=new String[]{DatabaseHandler.KEY_ID, DatabaseHandler.KEY_NAME, DatabaseHandler.KEY_AMT};
-		int[] to = new int[]{R.id.itemid,R.id.name,R.id.amount};
-		SimpleCursorAdapter expense=new SimpleCursorAdapter(this, R.layout.budgetitem, expenseCur, from, to);
-//		CustomListViewAdapter expense=new CustomListViewAdapter(this,R.layout.budgetitem,expenseCur, from, to);
-		listView.setAdapter(expense);
-		listView.setOnItemLongClickListener(new OnItemLongClickListener(){
-
-			@Override
-			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-					int arg2, long arg3) {
-				Dialog dialog = editDialog(arg1,"expense");
-				dialog.show();
-				return true;
-			}
-			
-		});
+//		Cursor expenseCur=db.fetchAllExpense();
+//		startManagingCursor(expenseCur);
+//		String[] from=new String[]{DatabaseHandler.KEY_ID, DatabaseHandler.KEY_NAME, DatabaseHandler.KEY_AMT};
+//		int[] to = new int[]{R.id.itemid,R.id.name,R.id.amount};
+//		SimpleCursorAdapter expense=new SimpleCursorAdapter(this, R.layout.expense, expenseCur, from, to);
+////		CustomListViewAdapter expense=new CustomListViewAdapter(this,R.layout.budgetitem,expenseCur, from, to);
+//		listView.setAdapter(expense);
+//		listView.setOnItemLongClickListener(new OnItemLongClickListener(){
+//
+//			@Override
+//			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+//					int arg2, long arg3) {
+//				Dialog dialog = editDialog(arg1,"expense");
+//				dialog.show();
+//				return true;
+//			}
+//			
+//		});
 		Cursor incomeCur=db.fetchAllIncome();
 		startManagingCursor(incomeCur);
 		String[] incomefrom = new String[]{DatabaseHandler.KEY_ID, DatabaseHandler.KEY_NAME, DatabaseHandler.KEY_AMT};
@@ -253,7 +259,7 @@ public class MainActivity extends Activity
 		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				//do Nothing, Dismiss
+				//do Nothing, Disprivate ArrayListmiss
 				dialog.cancel();
 			}});
 		builder.setNeutralButton("Delete", new DialogInterface.OnClickListener(){
@@ -285,6 +291,7 @@ public class MainActivity extends Activity
 					 db.addBudgetItem(type,wrapper.getTitle(),wrapper.getValue());
 					 updateLists();
 					 fillData();
+					 new MainActivity.listPopulate().execute();
 				}else{
 					Toast.makeText(getApplicationContext(), "Adding item failed. Please populate all fields.", Toast.LENGTH_LONG).show();
 				}
@@ -299,6 +306,54 @@ public class MainActivity extends Activity
 		.show();
 			
 	}
+	public class listPopulate extends AsyncTask<Void, Void, Void>{
+		private ProgressDialog progressDialog;
+		protected void onPreExecute(){
+			progressDialog=ProgressDialog.show(MainActivity.this, "Please wait...", "Retreiving data ...",true);
+		}
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			try{
+				String type="expense";
+				expenseItemList = new ArrayList<budgetItem>();
+				Log.d("Finances Bridge", "database count is "+String.valueOf(db.getItemCount(type)));
+				ArrayList<Integer> expenseIds = new ArrayList<Integer>(db.getIdList(type));
+				for(int i=0;i<expenseIds.size();i++){
+					Log.d(getLocalClassName(),"processing item# "+String.valueOf(i)+" with id of "+expenseIds.get(i));
+					budgetItem item=db.getBudgetItem(expenseIds.get(i),type);
+					if (item!=null){
+						expenseItemList.add(item);
+					}
+				}
+				
+				Thread.sleep(2000);
+			}catch(Exception e){
+				Log.e("Background_proc", "Crashed: "+e.getMessage());
+			}			
+			return null;
+		}
+		protected void onPostExecute(Void result){
+			progressDialog.dismiss();
+			Log.d(getLocalClassName(),"Initializing adapter with portItemList of "+expenseItemList.size()+" objects");
+			m_adapter=new ExpenseListAdapter(MainActivity.this, R.layout.expense, expenseItemList);
+			Log.d(getLocalClassName(),"Setting adapter");
+			ListView expenseList=(ListView)findViewById(R.id.list);
+			expenseList.setAdapter(MainActivity.this.m_adapter);
+			expenseList.setOnItemLongClickListener(new OnItemLongClickListener(){
+
+				@Override
+				public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					Dialog dialog = editDialog(arg1,"expense");
+					dialog.show();
+					return true;
+				}
+				
+			});
+		}
+		
+	}
+
 	
 	
 	private boolean doubleBacktoExitPressedOnce = false;
@@ -311,7 +366,6 @@ public class MainActivity extends Activity
 		Toast.makeText(this, "The cat doesn't want you to go!", Toast.LENGTH_SHORT).show();
 	    return;
 	   }
-	 
 	public void onResume(){
 		super.onResume();
 		updateLists();
@@ -323,5 +377,6 @@ public class MainActivity extends Activity
 		db.close();
 		
 	}
+	
 	}
 
