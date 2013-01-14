@@ -3,7 +3,6 @@ package com.luke.financesbridge;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -12,10 +11,13 @@ import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.Button;
@@ -26,7 +28,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity
+public class MainActivity extends FragmentActivity
 {
 	
 	Button addExpense;
@@ -58,12 +60,11 @@ public class MainActivity extends Activity
 	TextView tvBudgetBalance;
 	
 	
-	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.budget);
-		new listPopulate().execute();
+		new initiallistPopulate().execute();
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		listView=(ListView) findViewById(R.id.list);
 		listView2=(ListView) findViewById(R.id.list2);
@@ -77,7 +78,7 @@ public class MainActivity extends Activity
 		addExpense.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				add("expense");
+				addexpense();
 				updateLists();
 				fillData();
 				
@@ -87,7 +88,7 @@ public class MainActivity extends Activity
 		addIncome.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				add("income");
+				addincome();
 				
 				
 			}});
@@ -271,14 +272,74 @@ public class MainActivity extends Activity
 			
 		return builder.create();
 	}
+	
+	public Dialog expeditDialog(View view){
+		int itemid;
+		String itemName;
+		Float itemAmount;
+		String itemDue;
+		boolean itempaid;
+		
+		TextView tvid = (TextView) view.findViewById(R.id.exp_itemid);
+		TextView tvName = (TextView) view.findViewById(R.id.exp_name);
+		TextView tvAmount=(TextView) view.findViewById(R.id.exp_amount);
+		TextView tvdue=(TextView) view.findViewById(R.id.expense_due);
+		CheckBox cbpaid=(CheckBox) view.findViewById(R.id.checkbox_exp);
+		itemid =  Integer.parseInt((String) tvid.getText());
+		itemName = (String) tvName.getText();
+		itemAmount = Float.parseFloat((String) tvAmount.getText());
+		itemDue=String.valueOf(tvdue.getText());
+		itempaid=cbpaid.isChecked();
+		final budgetItem editItem=db.getBudgetItem(itemid, "expense");
+		
+		Toast.makeText(MainActivity.this, "Touched id is " + String.valueOf(itemid), Toast.LENGTH_LONG).show();
+		
+		LayoutInflater inflater=LayoutInflater.from(new ContextThemeWrapper(getApplicationContext(),R.style.AboutDialog));
+		View editView=inflater.inflate(R.layout.expedit,null);
+		final ExpDialogWrapper editwrapper=new ExpDialogWrapper(editView);
+		editwrapper.setTitle(itemName,editView);
+		editwrapper.setAmount(itemAmount,editView);
+		editwrapper.setDue(itemDue, editView);
+		editwrapper.setPaid(itempaid, editView);
+		
+		AlertDialog.Builder builder=new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this,R.style.AboutDialog));
+		builder.setTitle("Edit Item");
+		builder.setView(editView);
+		builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				editItem.setName(editwrapper.getTitle());
+				editItem.setAmount(editwrapper.getValue());
+				editItem.setDue(editwrapper.getDue());
+				editItem.setSelected(editwrapper.getPaid());
+				db.updateBudgetItem(editItem);
+				updateLists();
+				fillData();
+				new MainActivity.listPopulate().execute();
+			}});
+		builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				//do Nothing, Dismiss
+				dialog.cancel();
+			}});
+		builder.setNeutralButton("Delete", new DialogInterface.OnClickListener(){
+			public void onClick(DialogInterface dialog, int which){
+				db.deleteBudgetItem(editItem);
+				updateLists();
+				fillData();
+				new MainActivity.listPopulate().execute();
+			}});		
+			
+		return builder.create();
+	}
 
-	private void add(final String type){
-		String title="";
+	private void addincome(){
+		String type="income";
+		String title="Add Income";
 		LayoutInflater inflater=LayoutInflater.from(new ContextThemeWrapper(this,R.style.AboutDialog));
 		View addView=inflater.inflate(R.layout.alert,null);
 		final DialogWrapper wrapper=new DialogWrapper(addView);
-		if (type=="expense") title="Add Expense";
-		if (type=="income") title="Add Income";
 		new AlertDialog.Builder(new ContextThemeWrapper(this,R.style.AboutDialog))
 		  .setTitle(title)
 		  .setView(addView)
@@ -288,7 +349,7 @@ public class MainActivity extends Activity
 				 String title=wrapper.getTitle();
 				 Float value=wrapper.getValue();
 				 if (title.trim().length()>0 && value>0){
-					 db.addBudgetItem(type,wrapper.getTitle(),wrapper.getValue());
+					 db.addBudgetItem("income",wrapper.getTitle(),wrapper.getValue(),"1",false);
 					 updateLists();
 					 fillData();
 					 new MainActivity.listPopulate().execute();
@@ -301,11 +362,43 @@ public class MainActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which){
 				//Do nothing, dismiss
+				dialog.dismiss();
 			}
 		})
 		.show();
 			
 	}
+	private void addexpense(){
+		String title="Add Expense";
+		LayoutInflater inflater=LayoutInflater.from(new ContextThemeWrapper(this,R.style.AboutDialog));
+		View addView=inflater.inflate(R.layout.expedit,null);
+		final ExpDialogWrapper wrapper=new ExpDialogWrapper(addView);
+		AlertDialog.Builder builder=new AlertDialog.Builder(new ContextThemeWrapper(this,R.style.AboutDialog));
+		builder.setTitle(title);
+		builder.setView(addView);
+		builder.setPositiveButton("Add",new DialogInterface.OnClickListener() {
+			 @Override
+			public void onClick(DialogInterface dialog, int which) {
+				 String title=wrapper.getTitle();
+				 Float value=wrapper.getValue();
+				 if (title.trim().length()>0 && value>0){
+					 db.addBudgetItem("expense",wrapper.getTitle(),wrapper.getValue(),wrapper.getDue(),wrapper.getPaid());
+					 new MainActivity.listPopulate().execute();
+				}else{
+					Toast.makeText(getApplicationContext(), "Adding item failed. Please populate all fields.", Toast.LENGTH_LONG).show();
+				}
+			 }
+		});
+		builder.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+			@Override
+			public void onClick(DialogInterface dialog, int which){
+				//Do nothing, dismiss
+			}
+		});
+		builder.show();
+			
+	}
+
 	public class listPopulate extends AsyncTask<Void, Void, Void>{
 		private ProgressDialog progressDialog;
 		protected void onPreExecute(){
@@ -344,6 +437,56 @@ public class MainActivity extends Activity
 				@Override
 				public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
+					Dialog dialog = expeditDialog(arg1);
+					dialog.show();
+					return true;
+				}
+				
+			});
+		}
+		
+	}
+	public class initiallistPopulate extends AsyncTask<Void, Void, Void>{
+		private ProgressDialog progressDialog;
+		protected void onPreExecute(){
+			progressDialog=ProgressDialog.show(MainActivity.this, "Please wait...", "Retreiving data ...",true);
+		}
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			try{
+				String type="expense";
+				expenseItemList = new ArrayList<budgetItem>();
+				Log.d("Finances Bridge", "database count is "+String.valueOf(db.getItemCount(type)));
+				ArrayList<Integer> expenseIds = new ArrayList<Integer>(db.getIdList(type));
+				for(int i=0;i<expenseIds.size();i++){
+					Log.d(getLocalClassName(),"processing item# "+String.valueOf(i)+" with id of "+expenseIds.get(i));
+					budgetItem item=db.getBudgetItem(expenseIds.get(i),type);
+					if (item!=null){
+						expenseItemList.add(item);
+					}
+				}
+				
+				Thread.sleep(2000);
+			}catch(Exception e){
+				Log.e("Background_proc", "Crashed: "+e.getMessage());
+			}			
+			return null;
+		}
+		protected void onPostExecute(Void result){
+			progressDialog.dismiss();
+			Log.d(getLocalClassName(),"Initializing adapter with portItemList of "+expenseItemList.size()+" objects");
+			m_adapter=new ExpenseListAdapter(MainActivity.this, R.layout.expense, expenseItemList);
+			Log.d(getLocalClassName(),"Setting adapter");
+			ListView expenseList=(ListView)findViewById(R.id.list);
+			LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+			View header = inflater.inflate(R.layout.expenseheader, (ViewGroup) findViewById(R.id.expense_root));
+			expenseList.addHeaderView(header,null, false);
+			expenseList.setAdapter(MainActivity.this.m_adapter);
+			expenseList.setOnItemLongClickListener(new OnItemLongClickListener(){
+
+				@Override
+				public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
 					Dialog dialog = editDialog(arg1,"expense");
 					dialog.show();
 					return true;
@@ -353,7 +496,7 @@ public class MainActivity extends Activity
 		}
 		
 	}
-
+	
 	
 	
 	private boolean doubleBacktoExitPressedOnce = false;

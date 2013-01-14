@@ -22,6 +22,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	static final String KEY_ID="_id";
 	static final String KEY_NAME="name";
 	static final String KEY_AMT="amount";
+	static final String KEY_DUE="due";
+	static final String KEY_PAID="paid";
 	SQLiteDatabase db;
 	
 	public DatabaseHandler(Context context){
@@ -29,7 +31,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	}
 	
 	public void onCreate(SQLiteDatabase db){
-		String CREATE_EXPENSE_TABLE="CREATE TABLE " +TABLE_EXPENSE + "(" + KEY_ID + " INTEGER,"+KEY_NAME+" TEXT,"+KEY_AMT+" REAL"+",PRIMARY KEY("+KEY_ID+" ASC) )";
+		String CREATE_EXPENSE_TABLE="CREATE TABLE " +TABLE_EXPENSE + "(" + KEY_ID + " INTEGER,"+KEY_NAME+" TEXT,"+KEY_AMT+" REAL,"+KEY_DUE+" TEXT,"+KEY_PAID+" INTERGER,PRIMARY KEY("+KEY_ID+" ASC) )";
 		db.execSQL(CREATE_EXPENSE_TABLE);
 		String CREATE_INCOME_TABLE="CREATE TABLE " +TABLE_INCOME + "(" + KEY_ID + " INTEGER,"+KEY_NAME+" TEXT,"+KEY_AMT+" REAL,PRIMARY KEY("+KEY_ID+" ASC)"+")";
 		db.execSQL(CREATE_INCOME_TABLE);
@@ -67,13 +69,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 			db.close();
 			db=getReadableDatabase();
 		}
-		if (type == "expense"){
-			TABLE=TABLE_EXPENSE;
-		}
-		if (type == "income"){
-			TABLE=TABLE_INCOME;
-		}
-			
+		TABLE=setTable(type);			
 		String query="SELECT "+KEY_ID+" FROM "+TABLE;
 		Cursor c = db.rawQuery(query, null);
 		c.moveToFirst();
@@ -87,8 +83,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		return intList;
 	}
 	
-	void addBudgetItem(String type, String name, float amt){
-		SQLiteDatabase db = this.getWritableDatabase();
+	void addBudgetItem(String type, String name, float amt, String due, boolean paid){
+		if(db == null || !db.isOpen()){
+			db=getWritableDatabase();
+		}
+		if(db.isReadOnly()){
+			db.close();
+			db=getWritableDatabase();
+		}
 		
 		ContentValues values=new ContentValues();
 		
@@ -99,6 +101,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 			values.put(KEY_ID, getNewId(TABLE));
 			values.put(KEY_NAME, name);
 			values.put(KEY_AMT, amt);
+			values.put(KEY_DUE, due);
+			values.put(KEY_PAID, paid);
 			db.insert(TABLE, null, values);	
 		}
 		if (type == "income")
@@ -107,30 +111,45 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 			values.put(KEY_ID, getNewId(TABLE));
 			values.put(KEY_NAME, name);
 			values.put(KEY_AMT, amt);
-			db.insert(TABLE, null, values);;
+			db.insert(TABLE, null, values);
 		}
 		db.close();
 	}
 	
 	public budgetItem getBudgetItem(int id,String type){
-		SQLiteDatabase db = this.getReadableDatabase();
-		String SELECT_TABLE="";
+		if(db == null || !db.isOpen()){
+			db=getReadableDatabase();
+		}
+		if(!db.isReadOnly()){
+			db.close();
+			db=getReadableDatabase();
+		}
+		String TABLE=setTable(type);
+		Cursor cursor=db.query(TABLE, new String[] {KEY_ID, KEY_NAME, KEY_AMT},KEY_ID+"=?", new String[]{String.valueOf(id)},null,null,null,null);
+		cursor.moveToFirst();
+		budgetItem budgetItem=new budgetItem(Integer.parseInt(cursor.getString(0)),type,cursor.getString(1),Float.parseFloat(cursor.getString(2)),false, "1");
+		return budgetItem;
+	}
+	private String setTable(String type) {
+		String SELECT_TABLE = null;
 		if (type=="expense"){
 			SELECT_TABLE = TABLE_EXPENSE;
 		}
 		if (type=="income"){
 			SELECT_TABLE=TABLE_INCOME;
 		}
-			Cursor cursor=db.query(SELECT_TABLE, new String[] {KEY_ID, KEY_NAME, KEY_AMT},KEY_ID+"=?", new String[]{String.valueOf(id)},null,null,null,null);
-			cursor.moveToFirst();
-			budgetItem budgetItem=new budgetItem(Integer.parseInt(cursor.getString(0)),type,cursor.getString(1),Float.parseFloat(cursor.getString(2)),false);
-		return budgetItem;
+		return SELECT_TABLE;
 	}
+
 	public int updateBudgetItem(budgetItem budgetItem){
-		SQLiteDatabase db =this.getWritableDatabase();
-		String TABLE="";
-		if (budgetItem.getType()=="income") TABLE=TABLE_INCOME;
-		if (budgetItem.getType()=="expense") TABLE=TABLE_EXPENSE;
+		if(db == null || !db.isOpen()){
+			db=getWritableDatabase();
+		}
+		if(db.isReadOnly()){
+			db.close();
+			db=getWritableDatabase();
+		}
+		String TABLE=setTable(budgetItem.getType());
 		ContentValues values=new ContentValues();
 		values.put(KEY_NAME, budgetItem.getName());
 	    values.put(KEY_AMT, budgetItem.getAmount());
@@ -140,7 +159,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	}
 	public List<budgetItem> getAllExpenseItems(){
 		List<budgetItem> budgetItemList = new ArrayList<budgetItem>();
-		SQLiteDatabase db=this.getWritableDatabase();
+		if(db == null || !db.isOpen()){
+			db=getWritableDatabase();
+		}
+		if(db.isReadOnly()){
+			db.close();
+			db=getWritableDatabase();
+		}
 		String type ="expense";
 		String selectQuery="SELECT * FROM "+TABLE_EXPENSE;
 		Cursor cursor=db.rawQuery(selectQuery, null);
@@ -161,13 +186,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 				budgetItemList.add(budgetItem);
 			}while (cursor.moveToNext());
 		}
-		db.close();
 		return budgetItemList;
 	}
 	
 	public List<budgetItem> getAllIncomeItems(){
 		List<budgetItem> budgetItemList = new ArrayList<budgetItem>();
-		SQLiteDatabase db=this.getWritableDatabase();
+		if(db == null || !db.isOpen()){
+			db=getReadableDatabase();
+		}
+		if(!db.isReadOnly()){
+			db.close();
+			db=getReadableDatabase();
+		}
 		String type ="income";
 		String selectQuery="SELECT * FROM "+TABLE_INCOME;
 		Cursor cursor=db.rawQuery(selectQuery, null);
@@ -181,21 +211,31 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 				budgetItemList.add(budgetItem);
 			}while (cursor.moveToNext());
 		}
-		db.close();
+		
 		return budgetItemList;
 	}
     // Deleting single contact
 	public void deleteBudgetItem(budgetItem budgetItem) {
-		SQLiteDatabase db = this.getWritableDatabase();
-		String TABLE="";
-		if (budgetItem.getType()=="income") TABLE=TABLE_INCOME;
-		if (budgetItem.getType()=="expense") TABLE=TABLE_EXPENSE;
+		if(db == null || !db.isOpen()){
+			db=getWritableDatabase();
+		}
+		if(db.isReadOnly()){
+			db.close();
+			db=getWritableDatabase();
+		}
+		String TABLE=setTable(budgetItem.getType());
 		db.delete(TABLE, KEY_ID + " = ?", new String[] { String.valueOf(budgetItem.getID()) });
 		db.close();
 	}
 	public int getItemCount(String TABLE){
 		int total=0;
-		SQLiteDatabase db=this.getReadableDatabase();
+		if(db == null || !db.isOpen()){
+			db=getReadableDatabase();
+		}
+		if(!db.isReadOnly()){
+			db.close();
+			db=getReadableDatabase();
+		}
 		String countQuery="SELECT * FROM "+TABLE;
 		Cursor cursor=db.rawQuery(countQuery, null);
 		total = total+cursor.getCount();
@@ -203,7 +243,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		return total;
 	}
 	public Cursor fetchAllExpense(){
-		SQLiteDatabase db=this.getReadableDatabase();
+		if(db == null || !db.isOpen()){
+			db=getReadableDatabase();
+		}
+		if(!db.isReadOnly()){
+			db.close();
+			db=getReadableDatabase();
+		}
 		return db.query(TABLE_EXPENSE, new String[] {KEY_ID,KEY_NAME,KEY_AMT}, null, null, null, null, null);
 	}
 	public Cursor fetchAllIncome(){
@@ -211,7 +257,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 		return db.query(TABLE_INCOME, new String[] {KEY_ID,KEY_NAME,KEY_AMT}, null, null, null, null, null);
 	}
 	public int getNewId(String TABLE){
-		SQLiteDatabase db=this.getReadableDatabase();
+		if(db == null || !db.isOpen()){
+			db=getReadableDatabase();
+		}
+		if(!db.isReadOnly()){
+			db.close();
+			db=getReadableDatabase();
+		}
 		String getMaxId="SELECT MAX("+KEY_ID+") FROM "+TABLE;
 		Cursor cursor=db.rawQuery(getMaxId, null);
 		cursor.moveToFirst();

@@ -50,5 +50,5 @@ public class DialogWrapper {
 	      
 	      return(valueField);
 	    }
-	  }
+}
 

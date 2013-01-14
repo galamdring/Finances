@@ -7,6 +7,7 @@ public class budgetItem{
 	String _name;
 	float _amount;
 	boolean _selected;
+	String _due;
 	
 	//Empty contructor
 	public budgetItem(){
@@ -14,12 +15,13 @@ public class budgetItem{
 	}
 	
 	//contructor
-	public budgetItem(int id, String type, String name, float amount, boolean selected){
+	public budgetItem(int id, String type, String name, float amount, boolean selected, String due){
 		this._id=id;
 		this._type=type;
 		this._name=name;
 		this._amount=amount;
 		this._selected=selected;
+		this._due=due;
 	}
 	
 	//constructor
@@ -65,5 +67,11 @@ public class budgetItem{
 	}
 	public void setSelected(boolean selected){
 		this._selected=selected;
+	}
+	public String getDue(){
+		return this._due;
+	}
+	public void setDue(String due){
+		this._due=due;
 	}
 }
